@@ -25,7 +25,6 @@ class MoneroServiceProvider extends PackageServiceProvider
                 'create_monero_accounts_table',
                 'create_monero_addresses_table'
             ])
-            ->runsMigrations()
             ->hasCommands([
                 MoneroSyncCommand::class,
                 MoneroSyncWalletCommand::class,
@@ -34,7 +33,7 @@ class MoneroServiceProvider extends PackageServiceProvider
                 $command
                     ->publishConfigFile()
                     ->publishMigrations();
-            });;
+            });
 
         $this->app->singleton(Monero::class);
     }
