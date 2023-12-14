@@ -1,0 +1,15 @@
+services:
+    monero:
+        build:
+            context: ./docker/monero
+            dockerfile: Dockerfile
+        ports:
+            - "18080:18080"
+            - "18081:18081"
+            - "38082:38082"
+        volumes:
+            - ./.monero/chain:/data
+            - ./.monero/log:/log
+            - ./.monero/monerod.conf:/monerod.conf
+            - ./.monero/monero-wallet-rpc.conf:/monero-wallet-rpc.conf
+            - ./.monero/wallets:/wallets

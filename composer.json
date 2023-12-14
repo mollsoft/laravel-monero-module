@@ -1,0 +1,42 @@
+{
+    "name": "mollsoft/laravel-monero-module",
+    "description": "Laravel Monero Module",
+    "homepage": "https://github.com/mollsoft/laravel-monero-module",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "MollSoft",
+            "email": "info@mollsoft.com"
+        }
+    ],
+    "keywords": [
+        "mollsoft",
+        "laravel",
+        "monero",
+        "xmr"
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-decimal": "*",
+        "guzzlehttp/guzzle": "^7.2",
+        "illuminate/contracts": "^10.0",
+        "spatie/laravel-package-tools": "^1.15"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mollsoft\\LaravelMoneroModule\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mollsoft\\LaravelMoneroModule\\MoneroServiceProvider"
+            ],
+            "aliases": {
+                "Monero": "Mollsoft\\LaravelMoneroModule\\Facades\\Monero"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
