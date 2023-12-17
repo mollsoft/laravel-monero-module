@@ -22,7 +22,7 @@ class Monero
         /** @var class-string<MonerodRpcApi> $model */
         $model = config('monero.models.rpc_client');
         $api = new $model($host, $port, $username, $password);
-        $api->request('get_height');
+        $api->request('get_version');
 
         /** @var class-string<MoneroNode> $model */
         $model = config('monero.models.node');
