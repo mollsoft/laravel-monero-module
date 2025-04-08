@@ -2,6 +2,7 @@
 
 namespace Mollsoft\LaravelMoneroModule;
 
+use Illuminate\Support\Facades\Cache;
 use Mollsoft\LaravelMoneroModule\Concerns\Accounts;
 use Mollsoft\LaravelMoneroModule\Concerns\Addresses;
 use Mollsoft\LaravelMoneroModule\Concerns\Nodes;
@@ -16,14 +17,6 @@ use Mollsoft\LaravelMoneroModule\WebhookHandlers\WebhookHandlerInterface;
 class Monero
 {
     use Nodes, Wallets, Accounts, Addresses, Transfers;
-
-    /**
-     * @return class-string<MonerodRpcApi>
-     */
-    public function getModelRPC(): string
-    {
-        return config('monero.models.rpc_client');
-    }
 
     /**
      * @return class-string<MoneroNode>
@@ -70,5 +63,19 @@ class Monero
     public function getModelWebhook(): string
     {
         return config('monero.webhook_handler');
+    }
+
+    public function atomicLock(string $name, ?callable $callback, ?int $wait = null): mixed
+    {
+        $lockName = config('monero.atomic_lock.prefix').'_'.$name;
+        $lockTimeout = (int)config('monero.atomic_lock.timeout', 300);
+        $wait = $wait ?? (int)config('monero.atomic_lock.wait', 15);
+
+        return Cache::lock($lockName, $lockTimeout)->block($wait, $callback);
+    }
+
+    public function nodeAtomicLock(MoneroNode $node, ?callable $callback, ?int $wait = null): mixed
+    {
+        return $this->atomicLock('node_'.$node->id, $callback, $wait);
     }
 }

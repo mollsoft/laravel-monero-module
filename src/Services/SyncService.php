@@ -3,23 +3,22 @@
 namespace Mollsoft\LaravelMoneroModule\Services;
 
 use Brick\Math\BigDecimal;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
+use Mollsoft\LaravelMoneroModule\Api\Api;
 use Mollsoft\LaravelMoneroModule\Facades\Monero;
 use Mollsoft\LaravelMoneroModule\Models\MoneroAccount;
 use Mollsoft\LaravelMoneroModule\Models\MoneroDeposit;
 use Mollsoft\LaravelMoneroModule\Models\MoneroWallet;
-use Mollsoft\LaravelMoneroModule\MonerodRpcApi;
 use Mollsoft\LaravelMoneroModule\WebhookHandlers\WebhookHandlerInterface;
 
-class SyncService
+class SyncService extends BaseSync
 {
-    protected readonly MonerodRpcApi $api;
+    protected readonly Api $api;
     protected readonly WebhookHandlerInterface $webhookHandler;
-    protected readonly string $lockName;
-    protected readonly int $lockTimeout;
 
     /** @var MoneroDeposit[] */
     protected array $webhooks = [];
@@ -33,44 +32,50 @@ class SyncService
         $model = Monero::getModelWebhook();
         $this->webhookHandler = App::make($model);
 
-        $this->lockName = config('monero.atomic_lock.name');
-        $this->lockTimeout = config('monero.atomic_lock.timeout');
     }
 
     public function run(): void
     {
-        Cache::lock($this->lockName, $this->lockTimeout)->block(5, function () {
-            $this
-                ->openWallet()
-                ->refreshWallet()
-                ->getBalances()
-                ->incomingTransfers()
-                ->runWebhooks();
-        });
+        parent::run();
+
+        try {
+            Monero::nodeAtomicLock($this->wallet->node, function () {
+                $this
+                    ->openWallet()
+                    ->refreshWallet()
+                    ->getBalances()
+                    ->incomingTransfers()
+                    ->runWebhooks();
+            });
+        }
+        catch( LockTimeoutException $e ) {
+            $this->log('На данный момент нода занята другим сервисом!', 'error');
+        }
     }
 
     protected function openWallet(): self
     {
-        $this->api->request('open_wallet', [
-            'filename' => $this->wallet->name,
-            'password' => $this->wallet->password,
-        ]);
+        $this->log("Открываем кошелек {$this->wallet->name}...");
+        $this->api->openWallet($this->wallet->name, $this->wallet->password);
+        $this->log('Кошелек успешно открыт!');
 
         return $this;
     }
 
     protected function refreshWallet(): self
     {
-        $this->api->request('refresh');
+        $this->log('Выполняем функцию refresh...');
+        $this->api->refresh();
+        $this->log('Функция refresh выполнена!');
 
         return $this;
     }
 
     protected function getBalances(): self
     {
-        $getBalances = $this->api->request('get_balance', [
-            'all_accounts' => true,
-        ]);
+        $this->log('Запрашиваем общий баланс через метод get_balance...');
+        $getBalances = $this->api->getAllBalance();
+        $this->log('Баланс успешно получен: '.json_encode($getBalances));
 
         $balance = BigDecimal::of($getBalances['balance'] ?: '0')->dividedBy(pow(10, 12), 12);
         $unlockedBalance = BigDecimal::of($getBalances['unlocked_balance'] ?: '0')->dividedBy(pow(10, 12), 12);
@@ -104,9 +109,10 @@ class SyncService
         $this->wallet
             ->accounts()
             ->each(function (MoneroAccount $account) {
-                $getBalances = $this->api->request('get_balance', [
-                    'account_index' => $account->account_index,
-                ]);
+                $this->log("Запрашиваем баланс по Account Index $account->account_index...");
+                $getBalances = $this->api->getAccountBalance($account->account_index);
+                $this->log("Баланс успешно получен: ".json_encode($getBalances));
+
                 $balance = (BigDecimal::of($getBalances['balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
                 $unlockedBalance = (BigDecimal::of($getBalances['unlocked_balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
 
@@ -121,10 +127,12 @@ class SyncService
 
     protected function incomingTransfers(): self
     {
+        $this->log("Запрашиваем историю входящих переводов...");
         $getTransfers = $this->api->request(
             'get_transfers',
             ['in' => true, 'pending' => true, 'pool' => true, 'all_accounts' => true]
         );
+        $this->log('История получена: '.json_encode($getTransfers));
 
         $transfers = array_merge($getTransfers['pool'] ?? [], $getTransfers['in'] ?? []);
 
@@ -159,8 +167,11 @@ class SyncService
     {
         foreach ($this->webhooks as $item) {
             try {
+                $this->log('Запускаем Webhook на новый Deposit ID#'.$item->id.'...');
                 $this->webhookHandler->handle($item);
+                $this->log('Webhook успешно обработан!');
             } catch (\Exception $e) {
+                $this->log('Ошибка обработки Webhook: '.$e->getMessage());
                 Log::error('Monero WebHook for deposit '.$item->id.' - '.$e->getMessage());
             }
         }

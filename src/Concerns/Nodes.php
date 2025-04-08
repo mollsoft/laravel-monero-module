@@ -15,13 +15,8 @@ trait Nodes
         string $username = null,
         string $password = null
     ): MoneroNode {
-        $model = Monero::getModelRPC();
-        $api = new $model($host, $port, $username, $password);
-        $api->request('get_version');
-
         $model = Monero::getModelNode();
-
-        return $model::create([
+        $node = new $model([
             'name' => $name,
             'title' => $title,
             'host' => $host,
@@ -29,5 +24,9 @@ trait Nodes
             'username' => $username,
             'password' => $password,
         ]);
+        $node->api()->getVersion();
+        $node->save();
+
+        return $node;
     }
 }

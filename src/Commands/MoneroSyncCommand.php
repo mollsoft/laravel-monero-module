@@ -20,17 +20,21 @@ class MoneroSyncCommand extends Command
 
         $model::orderBy('id')
             ->each(function (MoneroWallet $wallet) {
-                $this->info("Monero Wallet $wallet->name starting sync...");
+                $this->info("Начинаем синхронизацию кошелька $wallet->name...");
 
                 try {
-                    App::make(SyncService::class, [
+                    $service = App::make(SyncService::class, [
                         'wallet' => $wallet
-                    ])->run();
+                    ]);
 
-                    $this->info("Monero Wallet $wallet->name successfully sync finished!");
+                    $service->setLogger(fn(string $message, ?string $type) => $this->{$type ? ($type === 'success' ? 'info' : $type) : 'line'}($message));
+
+                    $service->run();
+
+                    $this->info("Кошелек $wallet->name успешно синхронизирован!");
                 }
                 catch(\Exception $e) {
-                    $this->error("Error: {$e->getMessage()}");
+                    $this->error("Ошибка: {$e->getMessage()}");
                 }
             });
     }

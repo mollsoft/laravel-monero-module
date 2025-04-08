@@ -4,8 +4,8 @@ namespace Mollsoft\LaravelMoneroModule\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mollsoft\LaravelMoneroModule\Api\Api;
 use Mollsoft\LaravelMoneroModule\Facades\Monero;
-use Mollsoft\LaravelMoneroModule\MonerodRpcApi;
 
 class MoneroNode extends Model
 {
@@ -32,10 +32,10 @@ class MoneroNode extends Model
         return $this->hasMany(Monero::getModelWallet(), 'node_id');
     }
 
-    public function api(): MonerodRpcApi
+    public function api(): Api
     {
-        /** @var class-string<MonerodRpcApi> $model */
-        $model = Monero::getModelRPC();
+        /** @var class-string<Api> $model */
+        $model = config('monero.models.api');
 
         return new $model(
             host: $this->host,
