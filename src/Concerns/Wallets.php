@@ -84,10 +84,10 @@ trait Wallets
             ]);
         }
 
-        $walletMnemonic = $api->request('query_key', ['key_type' => 'mnemonic'])['key'];
-        if ($walletMnemonic !== $mnemonic) {
-            throw new \Exception('Wallet found, but mnemonic is changed!');
-        }
+//        $walletMnemonic = $api->request('query_key', ['key_type' => 'mnemonic'])['key'];
+//        if ($walletMnemonic !== $mnemonic) {
+//            throw new \Exception('Wallet found, but mnemonic is changed!');
+//        }
 
         $wallet = $node->wallets()->create([
             'name' => $name,
