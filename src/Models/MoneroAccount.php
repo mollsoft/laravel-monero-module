@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Mollsoft\LaravelMoneroModule\Casts\DecimalCast;
+use Mollsoft\LaravelMoneroModule\Casts\BigDecimalCast;
+use Mollsoft\LaravelMoneroModule\Facades\Monero;
 
 class MoneroAccount extends Model
 {
@@ -21,40 +22,28 @@ class MoneroAccount extends Model
 
     protected $casts = [
         'account_index' => 'integer',
-        'balance' => DecimalCast::class,
-        'unlocked_balance' => DecimalCast::class,
+        'balance' => BigDecimalCast::class,
+        'unlocked_balance' => BigDecimalCast::class,
     ];
 
     public function wallet(): BelongsTo
     {
-        /** @var class-string<MoneroWallet> $model */
-        $model = config('monero.models.wallet');
-
-        return $this->belongsTo($model, 'wallet_id');
+        return $this->belongsTo(Monero::getModelWallet(), 'wallet_id');
     }
 
     public function primaryAddress(): HasOne
     {
-        /** @var class-string<MoneroAddress> $model */
-        $model = config('monero.models.address');
-
-        return $this->hasOne($model, 'account_id')
+        return $this->hasOne(Monero::getModelAddress(), 'account_id')
             ->ofMany('address_index', 'min');
     }
 
     public function addresses(): HasMany
     {
-        /** @var class-string<MoneroAddress> $model */
-        $model = config('monero.models.address');
-
-        return $this->hasMany($model, 'account_id');
+        return $this->hasMany(Monero::getModelAddress(), 'account_id');
     }
 
     public function deposits(): HasMany
     {
-        /** @var class-string<MoneroDeposit> $model */
-        $model = config('monero.models.deposit');
-
-        return $this->hasMany($model, 'account_id');
+        return $this->hasMany(Monero::getModelDeposit(), 'account_id');
     }
 }

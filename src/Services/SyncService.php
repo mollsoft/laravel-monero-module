@@ -2,11 +2,12 @@
 
 namespace Mollsoft\LaravelMoneroModule\Services;
 
-use Decimal\Decimal;
+use Brick\Math\BigDecimal;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
+use Mollsoft\LaravelMoneroModule\Facades\Monero;
 use Mollsoft\LaravelMoneroModule\Models\MoneroAccount;
 use Mollsoft\LaravelMoneroModule\Models\MoneroDeposit;
 use Mollsoft\LaravelMoneroModule\Models\MoneroWallet;
@@ -29,7 +30,7 @@ class SyncService
         $this->api = $this->wallet->node->api();
 
         /** @var class-string<WebhookHandlerInterface> $model */
-        $model = config('monero.webhook_handler');
+        $model = Monero::getModelWebhook();
         $this->webhookHandler = App::make($model);
 
         $this->lockName = config('monero.atomic_lock.name');
@@ -71,8 +72,8 @@ class SyncService
             'all_accounts' => true,
         ]);
 
-        $balance = (new Decimal($getBalances['balance'] ?: '0'))->div(pow(10, 12));
-        $unlockedBalance = (new Decimal($getBalances['unlocked_balance'] ?: '0'))->div(pow(10, 12));
+        $balance = BigDecimal::of($getBalances['balance'] ?: '0')->dividedBy(pow(10, 12), 12);
+        $unlockedBalance = BigDecimal::of($getBalances['unlocked_balance'] ?: '0')->dividedBy(pow(10, 12), 12);
 
         $this->wallet->update([
             'sync_at' => Date::now(),
@@ -88,8 +89,8 @@ class SyncService
             ]);
 
         foreach ($getBalances['per_subaddress'] as $item) {
-            $balance = (new Decimal($item['balance'] ?: '0'))->div(pow(10, 12));
-            $unlockedBalance = (new Decimal($item['unlocked_balance'] ?: '0'))->div(pow(10, 12));
+            $balance = (BigDecimal::of($item['balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
+            $unlockedBalance = (BigDecimal::of($item['unlocked_balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
 
             $this->wallet
                 ->addresses()
@@ -106,8 +107,8 @@ class SyncService
                 $getBalances = $this->api->request('get_balance', [
                     'account_index' => $account->account_index,
                 ]);
-                $balance = (new Decimal($getBalances['balance'] ?: '0'))->div(pow(10, 12));
-                $unlockedBalance = (new Decimal($getBalances['unlocked_balance'] ?: '0'))->div(pow(10, 12));
+                $balance = (BigDecimal::of($getBalances['balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
+                $unlockedBalance = (BigDecimal::of($getBalances['unlocked_balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
 
                 $account->update([
                     'balance' => $balance,
@@ -128,7 +129,7 @@ class SyncService
         $transfers = array_merge($getTransfers['pool'] ?? [], $getTransfers['in'] ?? []);
 
         foreach ($transfers as $item) {
-            $amount = (new Decimal($item['amount'] ?: '0'))->div(pow(10, 12));
+            $amount = (BigDecimal::of($item['amount'] ?: '0'))->dividedBy(pow(10, 12), 12);
 
             $address = $this->wallet
                 ->addresses()

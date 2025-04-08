@@ -2,10 +2,6 @@
 
 namespace Mollsoft\LaravelMoneroModule;
 
-use Mollsoft\LaravelLitecoinModule\Commands\LitecoinSyncCommand;
-use Mollsoft\LaravelLitecoinModule\Commands\LitecoinSyncWalletCommand;
-use Mollsoft\LaravelLitecoinModule\Commands\LitecoinWebhookCommand;
-use Mollsoft\LaravelLitecoinModule\Litecoin;
 use Mollsoft\LaravelMoneroModule\Commands\MoneroSyncCommand;
 use Mollsoft\LaravelMoneroModule\Commands\MoneroSyncWalletCommand;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -19,12 +15,7 @@ class MoneroServiceProvider extends PackageServiceProvider
         $package
             ->name('monero')
             ->hasConfigFile()
-            ->hasMigrations([
-                'create_monero_nodes_table',
-                'create_monero_wallets_table',
-                'create_monero_accounts_table',
-                'create_monero_addresses_table'
-            ])
+            ->discoversMigrations()
             ->hasCommands([
                 MoneroSyncCommand::class,
                 MoneroSyncWalletCommand::class,
@@ -32,7 +23,9 @@ class MoneroServiceProvider extends PackageServiceProvider
             ->hasInstallCommand(function(InstallCommand $command) {
                 $command
                     ->publishConfigFile()
-                    ->publishMigrations();
+                    ->publishMigrations()
+                    ->askToRunMigrations()
+                    ->askToStarRepoOnGitHub('mollsoft/laravel-monero-module');
             });
 
         $this->app->singleton(Monero::class);

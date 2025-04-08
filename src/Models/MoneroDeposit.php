@@ -4,7 +4,8 @@ namespace Mollsoft\LaravelMoneroModule\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Mollsoft\LaravelMoneroModule\Casts\DecimalCast;
+use Mollsoft\LaravelMoneroModule\Casts\BigDecimalCast;
+use Mollsoft\LaravelMoneroModule\Facades\Monero;
 
 class MoneroDeposit extends Model
 {
@@ -20,32 +21,23 @@ class MoneroDeposit extends Model
     ];
 
     protected $casts = [
-        'amount' => DecimalCast::class,
+        'amount' => BigDecimalCast::class,
         'confirmations' => 'integer',
         'time_at' => 'datetime',
     ];
 
     public function wallet(): BelongsTo
     {
-        /** @var class-string<MoneroWallet> $model */
-        $model = config('monero.models.wallet');
-
-        return $this->belongsTo($model, 'wallet_id');
+        return $this->belongsTo(Monero::getModelWallet(), 'wallet_id');
     }
 
     public function account(): BelongsTo
     {
-        /** @var class-string<MoneroAccount> $model */
-        $model = config('monero.models.account');
-
-        return $this->belongsTo($model, 'address_id');
+        return $this->belongsTo(Monero::getModelAccount(), 'address_id');
     }
 
     public function address(): BelongsTo
     {
-        /** @var class-string<MoneroAddress> $model */
-        $model = config('monero.models.address');
-
-        return $this->belongsTo($model, 'address_id');
+        return $this->belongsTo(Monero::getModelAddress(), 'address_id');
     }
 }

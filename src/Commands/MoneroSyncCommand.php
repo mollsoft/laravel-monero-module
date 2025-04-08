@@ -4,6 +4,7 @@ namespace Mollsoft\LaravelMoneroModule\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\App;
+use Mollsoft\LaravelMoneroModule\Facades\Monero;
 use Mollsoft\LaravelMoneroModule\Models\MoneroWallet;
 use Mollsoft\LaravelMoneroModule\Services\SyncService;
 
@@ -15,8 +16,7 @@ class MoneroSyncCommand extends Command
 
     public function handle(): void
     {
-        /** @var class-string<MoneroWallet> $model */
-        $model = config('monero.models.wallet');
+        $model = Monero::getModelWallet();
 
         $model::orderBy('id')
             ->each(function (MoneroWallet $wallet) {

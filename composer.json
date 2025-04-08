@@ -17,10 +17,8 @@
     ],
     "require": {
         "php": "^8.2",
-        "ext-decimal": "*",
-        "guzzlehttp/guzzle": "^7.2",
-        "illuminate/contracts": "^10.0",
-        "spatie/laravel-package-tools": "^1.15"
+        "illuminate/contracts": "^10.0|^11.0|^12.0",
+        "spatie/laravel-package-tools": "1.92.0"
     },
     "autoload": {
         "psr-4": {
