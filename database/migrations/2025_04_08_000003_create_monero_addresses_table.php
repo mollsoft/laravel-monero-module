@@ -18,12 +18,12 @@ return new class extends Migration {
                 ->constrained('monero_accounts')
                 ->cascadeOnDelete();
             $table->string('address');
-            $table->unsignedInteger('address_index');
+            $table->integer('address_index');
             $table->string('title')
                 ->nullable();
-            $table->unsignedDecimal('balance', 30, 12)
+            $table->decimal('balance', 30, 12)
                 ->nullable();
-            $table->unsignedDecimal('unlocked_balance', 30, 12)
+            $table->decimal('unlocked_balance', 30, 12)
                 ->nullable();
             $table->timestamps();
 

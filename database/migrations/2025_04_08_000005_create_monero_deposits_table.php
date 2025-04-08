@@ -23,7 +23,7 @@ return new class extends Migration {
                 ->cascadeOnDelete();
             $table->string('txid');
             $table->decimal('amount', 30, 12);
-            $table->unsignedInteger('block_height')
+            $table->integer('block_height')
                 ->nullable();
             $table->integer('confirmations');
             $table->timestamp('time_at');

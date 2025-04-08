@@ -20,9 +20,9 @@ return new class extends Migration {
             $table->text('password')
                 ->nullable();
             $table->text('mnemonic');
-            $table->unsignedDecimal('balance', 30, 12)
+            $table->decimal('balance', 30, 12)
                 ->nullable();
-            $table->unsignedDecimal('unlocked_balance', 30, 12)
+            $table->decimal('unlocked_balance', 30, 12)
                 ->nullable();
             $table->timestamp('sync_at')
                 ->nullable();

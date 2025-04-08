@@ -16,10 +16,10 @@ return new class extends Migration {
             $table->string('base_address');
             $table->string('title')
                 ->nullable();
-            $table->unsignedTinyInteger('account_index');
-            $table->unsignedDecimal('balance', 30, 12)
+            $table->tinyInteger('account_index');
+            $table->decimal('balance', 30, 12)
                 ->nullable();
-            $table->unsignedDecimal('unlocked_balance', 30, 12)
+            $table->decimal('unlocked_balance', 30, 12)
                 ->nullable();
             $table->timestamps();
 

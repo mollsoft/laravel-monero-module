@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('title')
                 ->nullable();
             $table->string('host');
-            $table->unsignedInteger('port')
+            $table->integer('port')
                 ->default(38082);
             $table->string('username')
                 ->nullable();
