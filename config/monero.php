@@ -34,4 +34,14 @@ return [
         'timeout' => 300,
         'wait' => 15,
     ],
+
+    /**
+     * Node script runner for BIP39
+     * binary_path - required, node execution path
+     * script_path - path for JS file, optional, default - from package
+     */
+    'node' => [
+        'binary_path' => 'node',
+        'script_path' => null,
+    ],
 ];

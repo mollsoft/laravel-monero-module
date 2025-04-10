@@ -1,0 +1,19 @@
+{
+  "name": "monero-node-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild bip39.js --bundle --platform=node --format=cjs --minify --outfile=bip39.cjs"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bip39": "^3.1.0",
+    "js-sha3": "^0.9.3",
+    "monero-javascript": "^0.8.4",
+    "monero-ts": "^0.11.3"
+  }
+}

@@ -38,3 +38,11 @@ $schedule->command('monero:sync')
     ->everyMinute()
     ->runInBackground();
 ```
+
+
+### For Developers
+Command for build JS script:
+```bash
+npm i
+npm run build
+```
