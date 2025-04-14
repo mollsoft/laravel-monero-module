@@ -26,6 +26,8 @@ return new class extends Migration {
                 ->nullable();
             $table->timestamp('sync_at')
                 ->nullable();
+            $table->timestamp('touch_at')
+                ->nullable();
             $table->timestamps();
         });
     }

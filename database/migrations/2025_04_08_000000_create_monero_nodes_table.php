@@ -13,12 +13,18 @@ return new class extends Migration {
                 ->unique();
             $table->string('title')
                 ->nullable();
-            $table->string('host');
-            $table->integer('port')
-                ->default(38082);
+            $table->string('host')
+                ->default('127.0.0.1');
+            $table->integer('port');
             $table->string('username')
                 ->nullable();
             $table->text('password')
+                ->nullable();
+            $table->text('daemon')
+                ->nullable();
+            $table->integer('pid')
+                ->nullable();
+            $table->timestamp('sync_at')
                 ->nullable();
             $table->timestamps();
         });

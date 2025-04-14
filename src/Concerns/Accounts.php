@@ -10,7 +10,7 @@ trait Accounts
 {
     public function createAccount(MoneroWallet $wallet, ?string $title = null): MoneroAccount
     {
-        return Monero::nodeAtomicLock($wallet->node, function() use ($wallet, $title) {
+        return Monero::generalAtomicLock($wallet, function() use ($wallet, $title) {
             $api = $wallet->node->api();
 
             $api->openWallet($wallet->name, $wallet->password);

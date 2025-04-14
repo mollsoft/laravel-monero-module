@@ -4,6 +4,7 @@ namespace Mollsoft\LaravelMoneroModule\Api;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Mollsoft\LaravelMoneroModule\Models\MoneroNode;
 
 class Api
 {
@@ -11,6 +12,7 @@ class Api
     protected int $port;
     protected ?string $username;
     protected ?string $password;
+    protected ?int $pid;
 
     public function __construct(string $host, int $port, ?string $username = null, ?string $password = null)
     {
@@ -25,7 +27,7 @@ class Api
         $requestId = Str::uuid()->toString();
 
         $response = Http::withDigestAuth($this->username ?? '', $this->password ?? '')
-            ->timeout(30)
+            ->timeout(60)
             ->connectTimeout(10)
             ->post('http://'.$this->host.':'.$this->port.'/json_rpc', [
                 'jsonrpc' => '2.0',
@@ -35,8 +37,11 @@ class Api
             ]);
 
         $result = $response->json();
+        if (empty($result)) {
+            throw new \Exception($response->body());
+        }
 
-        if($result['id'] !== $requestId ) {
+        if ($result['id'] !== $requestId) {
             throw new \Exception('Request ID is not correct');
         }
 
@@ -49,6 +54,16 @@ class Api
         }
 
         return $result['result'];
+    }
+
+    public function getHeight(): int
+    {
+        $data = $this->request('get_height');
+        if( !isset( $data['height'] ) ) {
+            throw new \Exception(print_r($data, true));
+        }
+
+        return $data['height'];
     }
 
     public function openWallet(string $name, ?string $password = null): void
@@ -123,9 +138,14 @@ class Api
         return $this->request('get_accounts');
     }
 
-    public function restoreDeterministicWallet(string $name, ?string $password, string $mnemonic, ?int $restoreHeight = null, ?string $language = null): void
-    {
-        $language  = $language ?? 'English';
+    public function restoreDeterministicWallet(
+        string $name,
+        ?string $password,
+        string $mnemonic,
+        ?int $restoreHeight = null,
+        ?string $language = null
+    ): void {
+        $language = $language ?? 'English';
 
         $this->request('restore_deterministic_wallet', [
             'filename' => $name,

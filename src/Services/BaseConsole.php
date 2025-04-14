@@ -4,7 +4,7 @@ namespace Mollsoft\LaravelMoneroModule\Services;
 
 use Closure;
 
-abstract class BaseSync
+abstract class BaseConsole
 {
     protected ?Closure $logger = null;
     protected float $startedAt;

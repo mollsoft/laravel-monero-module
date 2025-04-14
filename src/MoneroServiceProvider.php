@@ -2,8 +2,11 @@
 
 namespace Mollsoft\LaravelMoneroModule;
 
+use Mollsoft\LaravelMoneroModule\Commands\MoneroCommand;
+use Mollsoft\LaravelMoneroModule\Commands\MoneroNodeSyncCommand;
+use Mollsoft\LaravelMoneroModule\Commands\MoneroWalletRPCCommand;
 use Mollsoft\LaravelMoneroModule\Commands\MoneroSyncCommand;
-use Mollsoft\LaravelMoneroModule\Commands\MoneroSyncWalletCommand;
+use Mollsoft\LaravelMoneroModule\Commands\MoneroWalletSyncCommand;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -17,8 +20,11 @@ class MoneroServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->discoversMigrations()
             ->hasCommands([
+                MoneroCommand::class,
                 MoneroSyncCommand::class,
-                MoneroSyncWalletCommand::class,
+                MoneroWalletSyncCommand::class,
+                MoneroWalletRPCCommand::class,
+                MoneroNodeSyncCommand::class,
             ])
             ->hasInstallCommand(function(InstallCommand $command) {
                 $command

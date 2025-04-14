@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "be4cb485e03e5cb85de4792e81b8ca5f",
+    "content-hash": "cfbd792bd715a0e6f51a6dd11dd66425",
     "packages": [
         {
             "name": "illuminate/contracts",
-            "version": "v12.7.2",
+            "version": "v12.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
@@ -226,7 +226,10 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.2"
+        "php": "^8.2",
+        "ext-curl": "*",
+        "ext-pcntl": "*",
+        "ext-posix": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

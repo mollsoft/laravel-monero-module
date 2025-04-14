@@ -3,15 +3,15 @@
 namespace Mollsoft\LaravelMoneroModule\Commands;
 
 use Illuminate\Console\Command;
-use Mollsoft\LaravelMoneroModule\Services\Sync\MoneroSync;
+use Mollsoft\LaravelMoneroModule\Services\SupervisorService;
 
-class MoneroSyncCommand extends Command
+class MoneroCommand extends Command
 {
-    protected $signature = 'monero:sync';
+    protected $signature = 'monero';
 
-    protected $description = 'Monero sync nodes & wallets';
+    protected $description = 'Monero supervisor process';
 
-    public function handle(MoneroSync $service): void
+    public function handle(SupervisorService $service): void
     {
         $service
             ->setLogger(fn(string $message, ?string $type) => $this->{$type ? ($type === 'success' ? 'info' : $type) : 'line'}($message))

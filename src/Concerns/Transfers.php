@@ -10,7 +10,7 @@ trait Transfers
 {
     public function send(MoneroAccount $account, string $address, int|float|string|BigDecimal $amount): string
     {
-        return Monero::nodeAtomicLock($account->wallet->node, function() use ($account, $address, $amount) {
+        return Monero::generalAtomicLock($account->wallet, function() use ($account, $address, $amount) {
             if (!($amount instanceof BigDecimal)) {
                 $amount = BigDecimal::of($amount);
             }
@@ -34,7 +34,7 @@ trait Transfers
 
     public function sendAll(MoneroAccount $account, string $address): string
     {
-        return Monero::nodeAtomicLock($account->wallet->node, function() use ($account, $address) {
+        return Monero::generalAtomicLock($account->wallet, function() use ($account, $address) {
             $wallet = $account->wallet;
             $api = $wallet->node->api();
 

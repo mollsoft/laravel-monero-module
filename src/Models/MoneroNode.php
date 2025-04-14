@@ -9,6 +9,8 @@ use Mollsoft\LaravelMoneroModule\Facades\Monero;
 
 class MoneroNode extends Model
 {
+    protected ?Api $_api = null;
+
     protected $fillable = [
         'name',
         'title',
@@ -16,6 +18,9 @@ class MoneroNode extends Model
         'port',
         'username',
         'password',
+        'daemon',
+        'pid',
+        'sync_at',
     ];
 
     protected $hidden = [
@@ -25,6 +30,9 @@ class MoneroNode extends Model
     protected $casts = [
         'port' => 'integer',
         'password' => 'encrypted',
+        'daemon' => 'array',
+        'pid' => 'integer',
+        'sync_at' => 'datetime',
     ];
 
     public function wallets(): HasMany
@@ -32,16 +40,28 @@ class MoneroNode extends Model
         return $this->hasMany(Monero::getModelWallet(), 'node_id');
     }
 
+    public function isLocal(): bool
+    {
+        return !empty($this->daemon);
+    }
+
     public function api(): Api
     {
-        /** @var class-string<Api> $model */
-        $model = config('monero.models.api');
+        if( !$this->_api ) {
+            /** @var class-string<Api> $model */
+            $model = config('monero.models.api');
+            $api = new $model(
+                host: $this->host,
+                port: $this->port,
+                username: $this->username,
+                password: $this->password,
+            );
 
-        return new $model(
-            host: $this->host,
-            port: $this->port,
-            username: $this->username,
-            password: $this->password,
-        );
+            $api->getVersion();
+
+            $this->_api = $api;
+        }
+
+        return $this->_api;
     }
 }

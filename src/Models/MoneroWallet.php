@@ -20,6 +20,7 @@ class MoneroWallet extends Model
         'balance',
         'unlocked_balance',
         'sync_at',
+        'touch_at',
     ];
 
     protected $hidden = [
@@ -32,6 +33,7 @@ class MoneroWallet extends Model
         'mnemonic' => 'encrypted',
         'balance' => BigDecimalCast::class,
         'unlocked_balance' => BigDecimalCast::class,
+        'touch_at' => 'datetime',
     ];
 
     public function node(): BelongsTo

@@ -76,6 +76,24 @@ class Monero
 
     public function nodeAtomicLock(MoneroNode $node, ?callable $callback, ?int $wait = null): mixed
     {
+        if( $node->isLocal() ) {
+            return call_user_func($callback);
+        }
+
         return $this->atomicLock('node_'.$node->id, $callback, $wait);
+    }
+
+    public function walletAtomicLock(MoneroWallet $wallet, ?callable $callback, ?int $wait = null): mixed
+    {
+        if( !$wallet->node->isLocal() ) {
+            return call_user_func($callback);
+        }
+
+        return $this->atomicLock('wallet_'.$wallet->id, $callback, $wait);
+    }
+
+    public function generalAtomicLock(MoneroWallet $wallet, ?callable $callback, ?int $wait = null): mixed
+    {
+        return $this->nodeAtomicLock($wallet->node, fn() => $this->walletAtomicLock($wallet, $callback, $wait), $wait);
     }
 }

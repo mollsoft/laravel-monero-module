@@ -1,56 +1,78 @@
 <?php
 
-namespace Mollsoft\LaravelMoneroModule\Services;
+namespace Mollsoft\LaravelMoneroModule\Services\Sync;
 
 use Brick\Math\BigDecimal;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use Mollsoft\LaravelMoneroModule\Api\Api;
 use Mollsoft\LaravelMoneroModule\Facades\Monero;
 use Mollsoft\LaravelMoneroModule\Models\MoneroAccount;
 use Mollsoft\LaravelMoneroModule\Models\MoneroDeposit;
+use Mollsoft\LaravelMoneroModule\Models\MoneroNode;
 use Mollsoft\LaravelMoneroModule\Models\MoneroWallet;
+use Mollsoft\LaravelMoneroModule\Services\BaseConsole;
 use Mollsoft\LaravelMoneroModule\WebhookHandlers\WebhookHandlerInterface;
 
-class SyncService extends BaseSync
+class WalletSync extends BaseConsole
 {
-    protected readonly Api $api;
-    protected readonly WebhookHandlerInterface $webhookHandler;
-
+    protected MoneroWallet $wallet;
+    protected ?MoneroNode $node;
+    protected ?Api $api;
+    protected ?WebhookHandlerInterface $webhookHandler;
     /** @var MoneroDeposit[] */
     protected array $webhooks = [];
 
-    public function __construct(
-        protected readonly MoneroWallet $wallet
-    ) {
-        $this->api = $this->wallet->node->api();
+    public function __construct(MoneroWallet $wallet, ?MoneroNode $node = null, ?Api $api = null)
+    {
+        $this->wallet = $wallet;
+        $this->node = $node ?? $wallet->node;
+        $this->api = $api;
 
-        /** @var class-string<WebhookHandlerInterface> $model */
         $model = Monero::getModelWebhook();
-        $this->webhookHandler = App::make($model);
-
+        $this->webhookHandler = $model ? App::make($model) : null;
     }
 
     public function run(): void
     {
         parent::run();
 
+        $this->log("Начинаем синхронизацию кошелька {$this->wallet->name}...");
+
         try {
-            Monero::nodeAtomicLock($this->wallet->node, function () {
+            Monero::walletAtomicLock($this->wallet, function() {
                 $this
+                    ->apiConnect()
                     ->openWallet()
-                    ->refreshWallet()
+                    //->refreshWallet()
                     ->getBalances()
                     ->incomingTransfers()
                     ->runWebhooks();
-            });
+            }, 5);
         }
-        catch( LockTimeoutException $e ) {
-            $this->log('На данный момент нода занята другим сервисом!', 'error');
+        catch(LockTimeoutException $e) {
+            $this->log("Ошибка: кошелек сейчас заблокирован другим процессом.", "error");
+            return;
         }
+        catch(\Exception $e) {
+            $this->log("Ошибка: {$e->getMessage()}", "error");
+            return;
+        }
+
+        $this->log("Кошелек {$this->wallet->name} успешно синхронизирован!");
+    }
+
+    protected function apiConnect(): static
+    {
+        if( !$this->api ) {
+            $this->log("Подключаемся к Node по API...");
+            $this->api = $this->node->api();
+            $this->log("Подключение к API успешно выполнено!");
+        }
+
+        return $this;
     }
 
     protected function openWallet(): self
@@ -93,7 +115,7 @@ class SyncService extends BaseSync
                 'unlocked_balance' => 0,
             ]);
 
-        foreach ($getBalances['per_subaddress'] as $item) {
+        foreach ($getBalances['per_subaddress'] ?? [] as $item) {
             $balance = (BigDecimal::of($item['balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
             $unlockedBalance = (BigDecimal::of($item['unlocked_balance'] ?: '0'))->dividedBy(pow(10, 12), 12);
 
@@ -165,14 +187,16 @@ class SyncService extends BaseSync
 
     protected function runWebhooks(): self
     {
-        foreach ($this->webhooks as $item) {
-            try {
-                $this->log('Запускаем Webhook на новый Deposit ID#'.$item->id.'...');
-                $this->webhookHandler->handle($item);
-                $this->log('Webhook успешно обработан!');
-            } catch (\Exception $e) {
-                $this->log('Ошибка обработки Webhook: '.$e->getMessage());
-                Log::error('Monero WebHook for deposit '.$item->id.' - '.$e->getMessage());
+        if( $this->webhookHandler ) {
+            foreach ($this->webhooks as $item) {
+                try {
+                    $this->log('Запускаем Webhook на новый Deposit ID#'.$item->id.'...');
+                    $this->webhookHandler->handle($item);
+                    $this->log('Webhook успешно обработан!');
+                } catch (\Exception $e) {
+                    $this->log('Ошибка обработки Webhook: '.$e->getMessage());
+                    Log::error('Monero WebHook for deposit '.$item->id.' - '.$e->getMessage());
+                }
             }
         }
 

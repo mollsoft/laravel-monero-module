@@ -11,7 +11,7 @@ trait Addresses
 {
     public function createAddress(MoneroAccount $account, ?string $title = null): MoneroAddress
     {
-        return Monero::nodeAtomicLock($account->wallet->node, function () use ($account, $title) {
+        return Monero::generalAtomicLock($account->wallet, function () use ($account, $title) {
             $wallet = $account->wallet;
             $api = $wallet->node->api();
 
