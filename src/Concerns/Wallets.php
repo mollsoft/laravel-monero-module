@@ -51,12 +51,14 @@ trait Wallets
             $api->openWallet($name, $password);
 
             $mnemonic = $api->queryKey('mnemonic');
+            $restoreHeight = $api->request('get_address')['restore_height'] ?? $api->getHeight();
 
             $wallet = $node->wallets()
                 ->create([
                     'name' => $name,
                     'password' => $password,
                     'mnemonic' => $mnemonic,
+                    'restore_height' => $restoreHeight,
                 ]);
 
             $getAccounts = $api->getAccounts();
@@ -90,9 +92,9 @@ trait Wallets
         return Monero::nodeAtomicLock(
             $node,
             function () use ($node, $name, $mnemonic, $password, $language, $restoreHeight) {
-                $restoreHeight = $restoreHeight ?? 0;
-
                 $api = $node->api();
+
+                $restoreHeight = $restoreHeight ?? $api->getHeight();
 
                 try {
                     $api->openWallet($name, $password);
@@ -104,6 +106,7 @@ trait Wallets
                     'name' => $name,
                     'password' => $password,
                     'mnemonic' => $mnemonic,
+                    'restore_height' => $restoreHeight
                 ]);
 
                 $getAccounts = $api->getAccounts();

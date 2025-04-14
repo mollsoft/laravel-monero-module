@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->text('password')
                 ->nullable();
             $table->text('mnemonic');
+            $table->integer('restore_height');
             $table->decimal('balance', 30, 12)
                 ->nullable();
             $table->decimal('unlocked_balance', 30, 12)

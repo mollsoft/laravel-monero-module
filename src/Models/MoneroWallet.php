@@ -17,6 +17,7 @@ class MoneroWallet extends Model
         'title',
         'password',
         'mnemonic',
+        'restore_height',
         'balance',
         'unlocked_balance',
         'sync_at',
@@ -31,6 +32,7 @@ class MoneroWallet extends Model
     protected $casts = [
         'password' => 'encrypted',
         'mnemonic' => 'encrypted',
+        'restore_height' => 'integer',
         'balance' => BigDecimalCast::class,
         'unlocked_balance' => BigDecimalCast::class,
         'touch_at' => 'datetime',
